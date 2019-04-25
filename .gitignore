@@ -1,0 +1,20 @@
+__pycache__/
+.pytest_cache
+.Python
+.env
+env/
+
+
+# Unit test / coverage reports
+htmlcov/
+html_coverage_report/
+.tox/
+.coverage
+.coverage.*
+.coveragerc
+setup.cfg
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
