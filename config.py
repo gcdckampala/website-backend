@@ -23,6 +23,7 @@ class Config:
         return (os.getenv(env).format(DB_USER, DB_PASSWORD,
                                       DB_HOST, DB_NAME)).strip('\"')
 
+"postgresql://localhost:@localhost/wb"
 
 class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = Config.generate_url(

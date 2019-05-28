@@ -36,6 +36,13 @@ class User(db.Model, DatabaseUitls):
             user = cls.query.filter_by(username=username)
         return user
 
+    @classmethod
+    def get_user(cls, email=None, username=None):
+        user = cls.query.filter_by(email=email, username=username) if username and email else "pass"
+        user = cls.query.filter_by(email=email) if email and not username else "pass"
+        user = cls.query.filter_by(username=username) if username and not email else "pass"
+        return user if not user or user != "pass" else None
+
     def __repr__(self):
         return f"<User: {self.username} {self.email}>"
 
@@ -44,7 +51,7 @@ class User(db.Model, DatabaseUitls):
 
     def verify_password(self, password):
         return pwd_context.verify(password, self.password)
-
+        
     def encode_auth_token(self, user_id):
         """
         Generates the Auth Token
