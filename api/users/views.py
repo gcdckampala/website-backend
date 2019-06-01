@@ -15,18 +15,20 @@ def signup():
     email = request.json.get('email')
 
     username_email_present = check_username_email(username, email)
-    
-    if not username_email_present  and User.get_user(username=username).first():
+
+    if not username_email_present and User.get_user(username=username).first():
         return jsonify({'error': 'User already exists'}), 400
 
     user = User(username=username, email=email, password=password)
     user.save()
     return jsonify({'username': user.username}), 201
 
+
 def check_username_email(username, email):
-    if not username or  not email:
-        entity = "username" if not username else "email" 
+    if not username or not email:
+        entity = "username" if not username else "email"
         return jsonify({'error': f'{entity} field is required.'}), 400
+
 
 @user_app.route("/api/v1/auth/login", methods=['POST'])
 def login():
@@ -54,23 +56,28 @@ def login():
                                email_missing, username_missing, username,
                                email, password, password_missing_response)
 
+
 def login_helper(*args):
     email_missing, username_missing, username, email, password, password_missing_response = args
     if email_missing:
         user = User.get_user(username=username).first()
-        return handle_wrong_username_email(user,password, password_missing_response, username=username, email=email)
-
+        return handle_wrong_username_email(
+            user, password, password_missing_response,
+            username=username, email=email)
 
     elif username_missing:
         user = User.get_user(email=email).first()
-        return handle_wrong_username_email(user,password, password_missing_response, username=username, email=email)
-        
+        return handle_wrong_username_email(
+            user, password, password_missing_response,
+            username=username, email=email)
 
 
-def handle_wrong_username_email(user_object, password, password_missing_response, **kwargs):
-    
+def handle_wrong_username_email(user_object, password,
+                                password_missing_response, **kwargs):
+
     if not user_object:
-        response = {"error": "Please enter the correct {}".format(entity_name(kwargs))} 
+        response = {"error": "Please enter the correct {}".format(
+            entity_name(kwargs))}
         return jsonify(response)
 
     check_password = user_object.verify_password(password)
@@ -91,11 +98,16 @@ def entity_name(args_dict):
     elif email:
         return "email"
 
+
 def handle_response(*args):
     both_fields_missing, password_missing, email_missing, username_missing, username, email, password, password_missing_response = args
     if both_fields_missing:
-        all_fields_missing_response = {'error': 'Login fields can not be empty.'}
-        email_username_missing_response = {'error': 'Either email or username field is required for login.'}
+        all_fields_missing_response = {
+            'error': 'Login fields can not be empty.'}
+        email_username_missing_response = {
+            'error': 'Either email or username field is required for login.'}
         return (jsonify(all_fields_missing_response), 400) if password_missing else (jsonify(email_username_missing_response), 400)
     else:
-        return login_helper(email_missing, username_missing, username, email, password, password_missing_response)
+        return login_helper(
+            email_missing, username_missing, username, email,
+            password, password_missing_response)

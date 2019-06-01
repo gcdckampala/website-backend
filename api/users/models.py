@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import jwt
 import config
 
-SECRET_KEY= config.Config.SECRET_KEY
+SECRET_KEY = config.Config.SECRET_KEY
 
 pwd_context = CryptContext(schemes=["sha256_crypt"])
 
@@ -41,7 +41,7 @@ class User(db.Model, DatabaseUitls):
 
     def verify_password(self, password):
         return pwd_context.verify(password, self.password)
-    
+
     def encode_auth_token(self, user_id):
         """
         Generates the Auth Token

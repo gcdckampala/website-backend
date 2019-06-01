@@ -20,22 +20,30 @@ class Config:
     @classmethod
     def generate_url(cls, *args):
         env, DB_USER, DB_PASSWORD, DB_HOST, DB_NAME = args
-        return (os.getenv(env).format(DB_USER, DB_PASSWORD, DB_HOST, DB_NAME)).strip('\"')
+        return (os.getenv(env).format(DB_USER, DB_PASSWORD,
+                                      DB_HOST, DB_NAME)).strip('\"')
 
-class ProductionConfig(Config): 
-    SQLALCHEMY_DATABASE_URI = Config.generate_url('DATABASE_URL_PROD', Config.DB_USER, Config.DB_PASSWORD, Config.DB_HOST, Config.DB_NAME)
+
+class ProductionConfig(Config):
+    SQLALCHEMY_DATABASE_URI = Config.generate_url(
+        'DATABASE_URL_PROD', Config.DB_USER, Config.DB_PASSWORD,
+        Config.DB_HOST, Config.DB_NAME)
+
 
 class DevelopmentConfig(Config):
     DEVELOPMENT = True
-    DEBUG = True 
-    SQLALCHEMY_DATABASE_URI = Config.generate_url('DATABASE_URL_DEV', Config.DB_USER, Config.DB_PASSWORD, Config.DB_HOST, Config.DB_NAME)
+    DEBUG = True
+    SQLALCHEMY_DATABASE_URI = Config.generate_url(
+        'DATABASE_URL_DEV', Config.DB_USER,
+        Config.DB_PASSWORD, Config.DB_HOST, Config.DB_NAME)
 
 
 class TestingConfig(Config):
     TESTING = not Config.TESTING
-    DEBUG = not Config.DEBUG 
-    SQLALCHEMY_DATABASE_URI = Config.generate_url('DATABASE_URL_TEST', Config.DB_USER, Config.DB_PASSWORD, Config.DB_HOST, Config.TESTDB_NAME)
-
+    DEBUG = not Config.DEBUG
+    SQLALCHEMY_DATABASE_URI = Config.generate_url(
+        'DATABASE_URL_TEST', Config.DB_USER, Config.DB_PASSWORD,
+        Config.DB_HOST, Config.TESTDB_NAME)
 
 
 config = {

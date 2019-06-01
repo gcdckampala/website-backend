@@ -6,6 +6,7 @@ from api.users.models import User, db
 
 # Import Blueprints
 from api.users.views import user_app
+from api.events.views import events_app
 
 
 # db = SQLAlchemy()
@@ -20,5 +21,6 @@ def create_app(ENV):
 
     # Register Blueprints
     app.register_blueprint(user_app)
+    app.register_blueprint(events_app)
 
     return app
