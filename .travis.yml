@@ -1,0 +1,25 @@
+
+language: python
+python:
+  - "3.6"
+
+# Service for postgre database
+services:
+  - postgresql
+
+# command to install dependencies
+install:
+  - "pip install -r requirements.txt"
+
+before_script:
+  - psql -c 'create database gcdc_test;' -U postgres
+  - python manage.py db upgrade
+
+# command to run tests
+script:
+   - pytest --cov=.
+   - coverage report
+
+
+after_success:
+  - coveralls

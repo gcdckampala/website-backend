@@ -1,7 +1,9 @@
 from api.utils.database import DatabaseUitls, db
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
+from sqlalchemy.orm import validates
 import jwt
+import re
 import config
 
 SECRET_KEY = config.Config.SECRET_KEY
@@ -17,11 +19,12 @@ class User(db.Model, DatabaseUitls):
     username = db.Column(db.String(32), index=True)
     email = db.Column(db.String(64))
     password = db.Column(db.String(128))
+    is_verified = db.Column(db.Boolean, default=False)
 
     def __init__(self, username, email, password):
         self.username = username
         self.email = email
-        self.password = self.hash_password(password)
+        self.password = self.validate_password(password)
 
     @classmethod
     def get_user(cls, email=None, username=None):
@@ -53,10 +56,51 @@ class User(db.Model, DatabaseUitls):
                 'iat': datetime.utcnow(),
                 'sub': user_id
             }
-            return jwt.encode(
+            token = jwt.encode(
                 payload,
                 SECRET_KEY,
                 algorithm='HS256'
             )
+            return token.decode('utf-8')
+
         except Exception as e:
             return e
+
+    @validates('username')
+    def validate_username(self, key, username):
+        if not username:
+            raise AssertionError('No username provided')
+
+        if self.get_user(username=username).first():
+            raise AssertionError('Username is already in use')
+
+        if len(username) < 5 or len(username) > 20:
+            raise AssertionError(
+                'Username must be between 5 and 20 characters')
+
+        return username
+
+    @validates('email')
+    def validate_email(self, key, email):
+        if not email:
+            raise AssertionError('No email provided')
+
+        if self.get_user(email=email).first():
+            raise AssertionError('Email is already in use')
+
+        if not re.compile("[^@]+@[^@]+\.[^@]+").search(email):
+            raise AssertionError('Provided email is not a valid email address')
+
+        return email
+
+    def validate_password(self, password):
+        if not password:
+            raise AssertionError('Password not provided')
+        if not re.compile(
+            r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,}$'
+        ).search(password):
+            raise AssertionError(
+                "Password should have Minimum of eight characters, "
+                "at least one letter, one number and one special character")
+
+        return self.hash_password(password)

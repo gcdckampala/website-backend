@@ -8,11 +8,11 @@ venv/
 
 # Unit test / coverage reports
 htmlcov/
+cov_html/
 html_coverage_report/
 .tox/
 .coverage
 .coverage.*
-.coveragerc
 setup.cfg
 .cache
 nosetests.xml

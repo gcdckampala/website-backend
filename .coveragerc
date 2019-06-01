@@ -1,0 +1,19 @@
+[report]
+
+omit =
+    */python?.?/*
+    */site-packages/nose/*
+    */__pycache__/*
+    */.pyc
+    */.pytest_cache/*
+    */python?.?/*
+    */site-packages/nose/*
+    */__pycache__/*
+    */.pyc
+    */.pytest_cache/*
+    */migrations/*
+    */.idea/*
+    */wsgi.py
+    */.vscode/*
+    */tests/*
+    */manage.py   

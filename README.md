@@ -1,5 +1,9 @@
 # Google Cloud Developer Community Kampala Backend API
 
+[![Maintainability](https://api.codeclimate.com/v1/badges/3604464d8e7ae724818d/maintainability)](https://codeclimate.com/github/gcdckampala/website-backend/maintainability)
+[![Build Status](https://travis-ci.com/gcdckampala/website-backend.svg?branch=develop)](https://travis-ci.com/gcdckampala/website-backend)
+[![Coverage Status](https://coveralls.io/repos/github/gcdckampala/website-backend/badge.svg?branch=develop)](https://coveralls.io/github/gcdckampala/website-backend?branch=develop)
+
 ## Product Description
 
 ## Development set up
