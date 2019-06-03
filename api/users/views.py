@@ -1,7 +1,8 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, json
+import requests
 from .models import User
-import jwt
-
+import random
+import string
 
 user_app = Blueprint('user_app', __name__)
 
@@ -9,31 +10,24 @@ user_app = Blueprint('user_app', __name__)
 @user_app.route("/api/v1/auth/signup", methods=['POST'])
 def signup():
     if not request.is_json:
-        return jsonify({"msg": "Missing JSON in request"}), 400
+        return jsonify({"error": "Missing JSON in request"}), 400
+
     username = request.json.get('username')
     password = request.json.get('password')
     email = request.json.get('email')
 
-    username_email_present = check_username_email(username, email)
-
-    if not username_email_present and User.get_user(username=username).first():
-        return jsonify({'error': 'User already exists'}), 400
-
-    user = User(username=username, email=email, password=password)
-    user.save()
-    return jsonify({'username': user.username}), 201
-
-
-def check_username_email(username, email):
-    if not username or not email:
-        entity = "username" if not username else "email"
-        return jsonify({'error': f'{entity} field is required.'}), 400
+    try:
+        user = User(username=username, email=email, password=password)
+        user.save()
+        return jsonify({'username': user.username}), 201
+    except AssertionError as exception_message:
+        return jsonify(error=f"{exception_message}."), 400
 
 
 @user_app.route("/api/v1/auth/login", methods=['POST'])
 def login():
     if not request.is_json:
-        return jsonify({"msg": "Missing JSON in request"}), 400
+        return jsonify({"error": "Missing JSON in request"}), 400
 
     username = request.json.get('username')
     password = request.json.get('password')
@@ -42,30 +36,45 @@ def login():
     both_fields_missing = not username and not email
     both_fields_present = username and email
     three_fields_present = both_fields_present and password
-    password_missing = not password
-    email_missing = not email and username
-    username_missing = not username and email
-
-    password_missing_response = {'error': 'Password is required for login.'}
 
     if both_fields_present or three_fields_present:
-        return jsonify({"msg": "Please use either username or email to login but not both!"})
+        return jsonify(
+            {"error":
+             "Please use either username or email to login but not both!"}
+        ), 400
 
     else:
-        return handle_response(both_fields_missing, password_missing,
-                               email_missing, username_missing, username,
-                               email, password, password_missing_response)
+        return handle_response(both_fields_missing, username,
+                               email, password)
+
+
+def handle_response(*args):
+    both_fields_missing, username, email, password = args
+
+    if not password:
+        return jsonify(
+            {"error":
+             "Username/Email and Password are required to login"}
+        ), 400
+
+    if both_fields_missing:
+        email_username_missing_response = {
+            'error': 'Either email or username field is required for login.'}
+        return (jsonify(email_username_missing_response), 400)
+    else:
+        return login_helper(username, email, password)
 
 
 def login_helper(*args):
-    email_missing, username_missing, username, email, password, password_missing_response = args
-    if email_missing:
+    username, email, password = args
+    password_missing_response = {'error': 'Password is required for login.'}
+    if username:
         user = User.get_user(username=username).first()
         return handle_wrong_username_email(
             user, password, password_missing_response,
             username=username, email=email)
 
-    elif username_missing:
+    elif email:
         user = User.get_user(email=email).first()
         return handle_wrong_username_email(
             user, password, password_missing_response,
@@ -75,39 +84,69 @@ def login_helper(*args):
 def handle_wrong_username_email(user_object, password,
                                 password_missing_response, **kwargs):
 
+    authentication_failed = {
+        "error": "Authentication Failed Incorret username/email or password"
+    }
     if not user_object:
-        response = {"error": "Please enter the correct {}".format(
-            entity_name(kwargs))}
-        return jsonify(response)
+        return jsonify(authentication_failed), 401
 
     check_password = user_object.verify_password(password)
     if check_password:
-        token = user_object.encode_auth_token(user_object.id)
-        success = {
-            "msg": f"User {user_object.username} successfully logged in!",
-            "token": token.decode()
-        }
-        return jsonify(success) if password else jsonify(password_missing_response)
-    return jsonify({"error": "Please enter correct password!"})
+        success = userDetailObject(user_object)
+        return success if password else jsonify(password_missing_response)
+    return jsonify(authentication_failed), 401
 
 
-def entity_name(args_dict):
-    username, email = args_dict.get('username'), args_dict.get('email')
-    if username:
-        return "username"
-    elif email:
-        return "email"
+@user_app.route("/api/v1/auth/google", methods=['POST'])
+def googleOAuth():
+    if not request.is_json:
+        return jsonify({"error": "Missing JSON in request"}), 400
+
+    access_token = request.json.get('access_token')
+    if not access_token:
+        return jsonify({"error": "access_token is required"}), 400
+
+    resp = requests.get(
+        "https://www.googleapis.com/oauth2/v2/userinfo",
+        headers={'Authorization':
+                 f"Bearer {access_token}",
+                 "Content-Type": "application/json"
+                 })
+
+    user_details = resp.json()
+    if user_details.get('error'):
+        return jsonify({"error": "The Token is Invalid or expired"}), 400
+
+    email = user_details.get('email')
+    username = user_details.get('name')
+    user = User.get_user(email=email).first()
+
+    return userDetailObject(user, username, email)
 
 
-def handle_response(*args):
-    both_fields_missing, password_missing, email_missing, username_missing, username, email, password, password_missing_response = args
-    if both_fields_missing:
-        all_fields_missing_response = {
-            'error': 'Login fields can not be empty.'}
-        email_username_missing_response = {
-            'error': 'Either email or username field is required for login.'}
-        return (jsonify(all_fields_missing_response), 400) if password_missing else (jsonify(email_username_missing_response), 400)
-    else:
-        return login_helper(
-            email_missing, username_missing, username, email,
-            password, password_missing_response)
+def randomPassword(stringLength=12):
+    """Generate a random string of letters, digits and special characters """
+    password_characters = string.ascii_letters +\
+        string.digits + '$@$!%*#?&'
+    return ''.join(random.choice(
+        password_characters) for i in range(stringLength))
+
+
+def userDetailObject(user, username=None, email=None):
+    if user:
+        return jsonify({
+            'email': user.email,
+            'username': user.username,
+            'token': f"{user.encode_auth_token(user.id)}"
+        }), 200
+
+    password = randomPassword()
+    user = User(username=username, email=email, password=password)
+    user.is_verified = True
+    user.save()
+
+    return jsonify({
+        'email': user.email,
+        'username': user.username,
+        'token': f"{user.encode_auth_token(user.id)}"
+    }), 201

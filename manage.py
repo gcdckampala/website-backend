@@ -25,7 +25,13 @@ def test():
 
 @manager.command
 def test_coverage():
-    pytest.main(["--cov=api", "tests/"])
+    pytest.main(["--cov=.", "tests/"])
+
+
+@manager.command
+def test_cov_report():
+    pytest.main(["--cov-report", "html:cov_html",
+                 "--cov=.", "tests/"])
 
 
 # Turn on reloader
