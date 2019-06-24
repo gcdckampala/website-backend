@@ -48,6 +48,13 @@
         python manage.py db upgrade
         ```
 
+- Seed db
+    - Add necessary seed data and seed function in `seeders/` directory
+    - seed data for table
+        ```
+        python manage.py seed -- <table_name>
+        ```
+
 - Run application.
     ```
     python manage.py runserver

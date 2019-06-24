@@ -1,4 +1,6 @@
-from api.utils.database import DatabaseUitls, db, ma
+from api.utils.database import db, ma
+from marshmallow import Schema
+from api.utils.base import BaseModel
 from sqlalchemy.orm import validates
 from ..users.models import UserSchema
 from ..utils.storage import upload_file
@@ -25,11 +27,10 @@ organizers = db.Table('organizers',
                       )
 
 
-class Program(db.Model, DatabaseUitls):
+class Program(BaseModel):
 
     __tablename__ = 'programs'
-
-    id = db.Column(db.Integer, primary_key=True)
+    
     name = db.Column(db.String())
     program_image = db.Column(db.String())
     description = db.Column(db.JSON)
@@ -149,7 +150,7 @@ class Program(db.Model, DatabaseUitls):
         return curriculum
 
 
-class ProgramSchema(ma.ModelSchema):
+class ProgramSchema(Schema):
     class Meta:
         model = Program
         sqla_session = db.session

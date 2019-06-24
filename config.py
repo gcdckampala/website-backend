@@ -1,4 +1,4 @@
-import os
+import os, sys
 from dotenv import load_dotenv
 
 
@@ -16,6 +16,8 @@ class Config:
     DB_USER = os.getenv('DB_USER')
     TESTDB_NAME = os.getenv('TESTDB_NAME')
     DB_PASSWORD = os.getenv('DB_PASSWORD')
+    USER_EMAIL_SENDER_EMAIL = 'cedric@fox.com'
+
 
     @classmethod
     def generate_url(cls, *args):
@@ -23,7 +25,7 @@ class Config:
         return (os.getenv(env).format(DB_USER, DB_PASSWORD,
                                       DB_HOST, DB_NAME)).strip('\"')
 
-"postgresql://localhost:@localhost/wb"
+# "postgresql://localhost:@localhost/wb"
 
 class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = Config.generate_url(
@@ -52,3 +54,6 @@ config = {
     'testing': TestingConfig,
     'production': ProductionConfig,
 }
+
+AppConfig = TestingConfig if 'pytest' in sys.modules else config.get(
+    os.getenv('FLASK_ENV'), 'development')
