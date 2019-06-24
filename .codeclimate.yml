@@ -1,0 +1,5 @@
+
+## Exclude Migrations And Test Duplications
+exclude_patterns:
+- "migrations/"
+- "tests/"

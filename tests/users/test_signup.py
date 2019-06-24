@@ -66,5 +66,4 @@ class TestLogin(BaseTestCase):
         Testing for Short username
         """
         res = self.register("te", "test14@gmail.com",  "test@1234")
-        print(res.data)
         self.assertEqual(res.status_code, 400)

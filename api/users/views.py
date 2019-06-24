@@ -1,10 +1,29 @@
-from flask import Blueprint, jsonify, request, json
-import requests
-from .models import User
+from flask import Blueprint, jsonify, request
+from .models import User, UserSchema
 import random
 import string
+from google.auth.transport import requests
+from google.oauth2 import id_token
 
 user_app = Blueprint('user_app', __name__)
+
+
+@user_app.route("/api/v1/users")
+def get_users():
+    users = User.query.all()
+    user_schema = UserSchema(many=True)
+    return jsonify(
+        {'users': user_schema.dump(users).data}), 200
+
+
+@user_app.route("/api/v1/users/<username>")
+def get_user(username):
+    user = User.get_user(username=username).first()
+    if user:
+        user_schema = UserSchema()
+        return jsonify(
+            {'user': user_schema.dump(user).data}), 200
+    return jsonify({'error': 'Invalid username'}), 400
 
 
 @user_app.route("/api/v1/auth/signup", methods=['POST'])
@@ -102,32 +121,29 @@ def googleOAuth():
     if not request.is_json:
         return jsonify({"error": "Missing JSON in request"}), 400
 
-    access_token = request.json.get('access_token')
+    access_token = request.json.get('id_token')
     if not access_token:
-        return jsonify({"error": "access_token is required"}), 400
+        return jsonify({"error": "id_token is required"}), 400
 
-    resp = requests.get(
-        "https://www.googleapis.com/oauth2/v2/userinfo",
-        headers={'Authorization':
-                 f"Bearer {access_token}",
-                 "Content-Type": "application/json"
-                 })
+    try:
+        user_details = id_token.verify_oauth2_token(
+            access_token, requests.Request())
 
-    user_details = resp.json()
-    if user_details.get('error'):
-        return jsonify({"error": "The Token is Invalid or expired"}), 400
+        email = user_details.get('email')
+        username = user_details.get('name')
+        user = User.get_user(email=email).first()
 
-    email = user_details.get('email')
-    username = user_details.get('name')
-    user = User.get_user(email=email).first()
+        return userDetailObject(user, username, email)
 
-    return userDetailObject(user, username, email)
+    except ValueError:
+        return jsonify({"error": "Authentication Failed. Token is either"
+                        " invalid or expired"}), 400
 
 
 def randomPassword(stringLength=12):
     """Generate a random string of letters, digits and special characters """
     password_characters = string.ascii_letters +\
-        string.digits + '$@$!%*#?&'
+        string.digits + string.ascii_uppercase + '$@$!%*#?&'
     return ''.join(random.choice(
         password_characters) for i in range(stringLength))
 
