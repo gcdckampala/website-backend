@@ -36,11 +36,21 @@ def signup():
     email = request.json.get('email')
 
     try:
+        # check that user with similar email exists
+        check_user_exists(email)
+
         user = User(username=username, email=email, password=password)
         user.save()
         return jsonify({'username': user.username}), 201
     except AssertionError as exception_message:
         return jsonify(error=f"{exception_message}."), 400
+
+def check_user_exists(email):
+    try:
+        if User.get_user(email=email).first():
+            raise AssertionError('Email is already in use')
+    except AttributeError:
+        pass
 
 
 @user_app.route("/api/v1/auth/login", methods=['POST'])
@@ -164,5 +174,5 @@ def userDetailObject(user, username=None, email=None):
     return jsonify({
         'email': user.email,
         'username': user.username,
-        'token': f"{user.encode_auth_token(user.id)}"
+        'token': f"{user.encode_auth_token(user.email)}"
     }), 201

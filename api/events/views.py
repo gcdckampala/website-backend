@@ -1,5 +1,7 @@
 from flask import Blueprint, jsonify, request, json
+from flask_user import roles_required
 from .models import MeetupAPIWrapper
+
 
 events_app = Blueprint('events_app', __name__)
 wrapper = MeetupAPIWrapper()

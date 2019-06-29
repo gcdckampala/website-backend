@@ -1,69 +1,137 @@
-from ..test_base import BaseTestCase
 
 
-class TestLogin(BaseTestCase):
+class TestSignUp:
 
-    def test_user_creation(self):
+    def test_user_creation(self, init_db, client, default_role ):
         """
         Testing for User creation
         """
-        res = self.register("test1234", "test1234@gmail.com", "test@1234")
-        self.assertEqual(res.status_code, 201)
+        role = default_role.save()
+        res = client.post(
+            'api/v1/auth/signup', 
+            json={
+                'username': 'Ayotwasapening',
+                'email': 'test32@email.com',
+                'password': 'Cedric@25!'
+            }
+        )
+        assert res.status_code == 201
 
-    def test_user_email_missing(self):
+    def test_user_email_missing(self, init_db, client, default_role ):
         """
         Testing for Email Missing
         """
-        res = self.register("test12", None, "test@1234")
-        self.assertEqual(res.status_code, 400)
+        role = default_role.save()
+        res = client.post(
+            'api/v1/auth/signup', 
+            json={
+                'username': 'Ayotwasapening',
+                'password': 'Cedric@25!'
+            }
+        )
+        assert res.status_code == 400
 
-    def test_user_username_missing(self):
+    def test_user_username_missing(self, init_db, client, default_role ):
         """
         Testing for username Missing
         """
-        res = self.register(None, "test14@gmail.com", "test@1234")
-        self.assertEqual(res.status_code, 400)
+        role = default_role.save()
+        res = client.post(
+            'api/v1/auth/signup', 
+            json={
+                'email': 'test32@email.com',
+                'password': 'Cedric@25!'
+            }
+        )
+        assert res.status_code == 400
 
-    def test_user_password_missing(self):
+    def test_user_password_missing(self, init_db, client, default_role ):
         """
         Testing for password Missing
         """
-        res = self.register("test12", "test14@gmail.com", None)
-        self.assertEqual(res.status_code, 400)
+        role = default_role.save()
+        res = client.post(
+            'api/v1/auth/signup', 
+            json={
+                'username': 'Ayotwasapening',
+                'email': 'test32@email.com',
+            }
+        )
+        assert res.status_code == 400
 
-    def test_user_email_exists(self):
+    def test_user_email_exists(self, init_db, client, new_test_user, default_role ):
         """
         Testing for User Email Exists
         """
-        self.register("testEmail", "test14@gmail.com", "test@1234")
-        res = self.register("otheruser", "test14@gmail.com",  "test@1234")
-        self.assertEqual(res.status_code, 400)
+        user = new_test_user.save()
+        role = default_role.save()
+        res = client.post(
+            'api/v1/auth/signup', 
+            json={
+                'username': 'Ayowasape',
+                'email': 'test@email.com',
+                'password': 'Cedric@25!'
+            }
+        )
+        assert res.status_code == 400
 
-    def test_user_username_exists(self):
+    def test_user_username_exists(self, init_db, client, new_test_user, default_role ):
         """
         Testing for User Username Exists
         """
-        self.register("testEmail", "test14@gmail.com", "test@1234")
-        res = self.register("testEmail", "otheremail@gmail.com",  "test@1234")
-        self.assertEqual(res.status_code, 400)
+        user = new_test_user.save()
+        role = default_role.save()
+        res = client.post(
+            'api/v1/auth/signup', 
+            json={
+                'username': 'Ayowasap',
+                'email': 'test2@email.com',
+                'password': 'Cedric@25!'
+            }
+        )
+        assert res.status_code == 400
 
-    def test_invalid_password(self):
+    def test_invalid_password(self, init_db, client, default_role ):
         """
         Testing for Invalid Password Pattern
         """
-        res = self.register("testEmail", "test14@gmail.com", "test")
-        self.assertEqual(res.status_code, 400)
+        role = default_role.save()
+        res = client.post(
+            'api/v1/auth/signup', 
+            json={
+                'username': 'Ayowasap',
+                'email': 'test@email.com',
+                'password': 'Cedri5'
+            }
+        )
+        assert res.status_code == 400
 
-    def test_invalid_email(self):
+    def test_invalid_email(self, init_db, client, default_role ):
         """
         Testing for Invalid Email Pattern
         """
-        res = self.register("testEmail", "invalidemail",  "test@1234")
-        self.assertEqual(res.status_code, 400)
+        role = default_role.save()
+        res = client.post(
+            'api/v1/auth/signup', 
+            json={
+                'username': 'Ayowasap',
+                'email': 'testemail.com',
+                'password': 'Cedric@25!'
+            }
+        )
+        assert res.status_code == 400
 
-    def test_short_username(self):
+    def test_short_username(self, init_db, client, default_role ):
         """
         Testing for Short username
         """
-        res = self.register("te", "test14@gmail.com",  "test@1234")
-        self.assertEqual(res.status_code, 400)
+        role = default_role.save()
+        res = client.post(
+            'api/v1/auth/signup', 
+            json={
+                'username': 'Ayo',
+                'email': 'test@email.com',
+                'password': 'Cedric@25!'
+            }
+        )
+        assert res.status_code == 400

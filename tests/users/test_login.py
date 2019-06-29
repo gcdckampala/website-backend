@@ -1,64 +1,104 @@
-from ..test_base import BaseTestCase
 
 
-class TestLogin(BaseTestCase):
+class TestLogin:
 
-    def test_user_login_email(self):
+    def test_user_login_email(self, init_db, client, new_test_user ):
         """
         Testing for User Login
         """
-        self.register("newuser", "testnew@gmail.com", "test@1234")
-        res = self.login_email("testnew@gmail.com", "test@1234")
-        self.assertEqual(res.status_code, 200)
 
-    def test_user_login_username(self):
+        user = new_test_user.save()
+        res = client.post(
+            'api/v1/auth/login', 
+            json={
+                'email': 'test@email.com',
+                'password': 'Cedric@25!'
+            }
+        )
+        assert res.status_code == 200
+
+    def test_user_login_username(self, init_db, client, new_test_user):
         """
         Testing for User Login
         """
-        self.register("newuser", "testnew@gmail.com", "test@1234")
-        res = self.login_username("newuser", "test@1234")
-        self.assertEqual(res.status_code, 200)
+        user = new_test_user.save()
+        res = client.post(
+            'api/v1/auth/login', 
+            json={
+                'username': 'Ayowasap',
+                'password': 'Cedric@25!'
+            }
+        )
+        assert res.status_code ==  200
 
-    def test_login_wrong_password(self):
+
+    def test_login_wrong_password(self, init_db, client, new_test_user):
         """
         Testing for User Login Wrong Password
         """
-        self.register("newuser", "testnew@gmail.com", "test@1234")
-        res = self.login_email("testnew@gmail.com", "test")
-        self.assertEqual(res.status_code, 401)
+        user = new_test_user.save()
+        res = client.post(
+            'api/v1/auth/login', 
+            json={
+                'email': 'test@email.com',
+                'password': 'Cedric@25'
+            }
+        )
+        assert res.status_code == 401
 
-    def test_login_wrong_email(self):
+    def test_login_wrong_email(self, init_db, client, new_test_user):
         """
         Testing for User Login Wrong Email
         """
-        self.register("newuser", "testnew@gmail.com", "test@1234")
-        res = self.login_email("testn@gmail.com", "test@1234")
-        self.assertEqual(res.status_code, 401)
-
-    def test_login_wrong_username(self):
-        """
-        Testing for User Login Wrong Username
-        """
-        self.register("newuser", "testnew@gmail.com", "test@1234")
-        res = self.login_username("newuse", "test@1234")
-        self.assertEqual(res.status_code, 401)
-
-    def test_login_without_email(self):
-        """
-        Testing for User Login Wrong Username
-        """
-        self.register("newuser", "testnew@gmail.com", "test@1234")
-        res = self.login_email(None, "test@1234")
-        self.assertEqual(res.status_code, 400)
-
-    def test_login_with_username_and_email(self):
-        """
-        Testing for User Login Wrong Username
-        """
-        self.register("newuser", "testnew@gmail.com", "test@1234")
-        res = self.client.post(
-            'api/v1/auth/login',
-            json=dict(username="newuser",
-                      email="testnew@gmail.com", password="test@1234"),
+        user = new_test_user.save()
+        res = client.post(
+            'api/v1/auth/login', 
+            json={
+                'email': 'tes@email.com',
+                'password': 'Cedric@25!'
+            }
         )
-        self.assertEqual(res.status_code, 400)
+        assert res.status_code ==  401
+
+    def test_login_wrong_username(self, init_db, client, new_test_user):
+        """
+        Testing for User Login Wrong Username
+        """
+        user = new_test_user.save()
+        res = client.post(
+            'api/v1/auth/login', 
+            json={
+                'username': 'Ayy',
+                'password': 'Cedric@25!'
+            }
+        )
+        assert res.status_code ==  401
+
+    def test_login_without_email(self, init_db, client, new_test_user):
+        """
+        Testing for User Login Wrong Username
+        """
+        user = new_test_user.save()
+        res = client.post(
+            'api/v1/auth/login', 
+            json={
+                'email': '',
+                'password': 'Cedric@25!'
+            }
+        )
+        assert res.status_code ==  400
+
+    def test_login_with_username_and_email(self, init_db, client, new_test_user):
+        """
+        Testing for User Login Wrong Username
+        """
+        user = new_test_user.save()
+        res = client.post(
+            'api/v1/auth/login', 
+            json={
+                'username': 'Ayowasap',
+                'email': 'tes@email.com',
+                'password': 'Cedric@25!'
+            }
+        )
+        assert res.status_code ==  400

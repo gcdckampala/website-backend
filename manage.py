@@ -1,9 +1,13 @@
 import os
 import pytest
+import click
 from flask_script import Manager, Server, Shell
 from flask_migrate import Migrate, MigrateCommand
 from application import create_app, db
 from dotenv import load_dotenv
+from seeders import seed_db, SEED_OPTIONS
+from flask_user import UserManager
+from api.users.models import User
 
 
 load_dotenv()
@@ -12,10 +16,29 @@ load_dotenv()
 app = create_app(os.getenv('FLASK_ENV', 'development'))
 migrate = Migrate(app, db)
 manager = Manager(app)
+user_manager = UserManager(app, db, User)
 
 
 def _make_context():
     return dict(app=app, db=db)
+
+@app.cli.command(context_settings=dict(token_normalize_func=str.lower))
+@click.argument('entity_name', required=False)
+@click.option(
+    '--entity_name',
+    help='The Resource/Entity name you want to seed.',
+    type=click.Choice(SEED_OPTIONS))
+@manager.command
+def seed(entity_name):
+    """
+    Seeds the database with sample data
+
+    Args:
+        resource_name (string): The resource name you want to seed
+    Return:
+        func: call the function if successful or the click help option if unsuccesful
+    """
+    seed_db(entity_name=entity_name)
 
 
 @manager.command
